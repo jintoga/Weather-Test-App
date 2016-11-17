@@ -1,6 +1,9 @@
 package com.dat.weathertestapp;
 
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -18,14 +21,28 @@ import butterknife.ButterKnife;
 import com.dat.weathertestapp.model.Weather;
 import com.dat.weathertestapp.utils.ParserUtil;
 import com.dat.weathertestapp.utils.TextUtil;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import com.squareup.picasso.Picasso;
-import java.util.ArrayList;
+import java.lang.reflect.Type;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import retrofit.client.Response;
 import retrofit.mime.TypedByteArray;
 
 public class MainActivity extends AppCompatActivity implements IWeatherLoader {
+
+    private static final String KEY_CURRENT_WEATHER = "CURRENT_WEATHER";
+    private static final String KEY_FORECAST16_WEATHER = "FORECAST_WEATHER";
+
+    private static final String city_id_key = "id";
+    private static final String unit_key = "units";
+    private static final String lang_key = "lang";
+    private static final String app_id_key = "appid";
+    private static final String count_key = "cnt";
+
+    private static final String TAG = MainActivity.class.getName();
 
     @Bind(R.id.toolbar)
     protected Toolbar toolbar;
@@ -38,18 +55,9 @@ public class MainActivity extends AppCompatActivity implements IWeatherLoader {
     @Bind(R.id.loading)
     protected ProgressBar loading;
 
-    private static final String TAG = MainActivity.class.getName();
     private WeatherPresenter presenter;
 
-    private Weather curWeather;
-    private ArrayList<Weather> weathersForecast16;
     private WeatherAdapter adapter;
-
-    private static final String city_id_key = "id";
-    private static final String unit_key = "units";
-    private static final String lang_key = "lang";
-    private static final String app_id_key = "appid";
-    private static final String count_key = "cnt";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,6 +67,7 @@ public class MainActivity extends AppCompatActivity implements IWeatherLoader {
         ButterKnife.bind(this);
         setSupportActionBar(toolbar);
         initRecyclerView();
+        restoreWeatherData();
     }
 
     private void initRecyclerView() {
@@ -98,22 +107,22 @@ public class MainActivity extends AppCompatActivity implements IWeatherLoader {
         loading.setVisibility(View.VISIBLE);
     }
 
-    private void setCurrentDayWeatherData(Weather weather) {
+    private void bindCurrentDayWeatherData(Weather weather) {
         if (weather != null) {
             Picasso.with(this).load(weather.getIconURL()).into(imageViewCurDay);
             String weatherResult;
-            String temperature = "Temperature: ";
+            String temperature = "Температура: ";
             temperature += TextUtil.sizeSpan(TextUtil.celsius(weather.getCur_temp()), 26);
 
-            String wind = "Wind: ";
+            String wind = "Ветер: ";
             wind += new TextUtil.DegreeToDirection(weather.getWindDeg()).convert();
             wind += ", " + TextUtil.windUnit(weather.getWindSpeed());
 
-            String pressure = "Pressure: ";
+            String pressure = "Давление: ";
             pressure += TextUtil.pressureUnit(
                 new TextUtil.HPAtoTorrConverter(weather.getPressure()).convert());
 
-            String humidity = "Humidity: ";
+            String humidity = "Влажность: ";
             humidity += TextUtil.humidityUnit(weather.getHumidity());
             weatherResult = temperature + "\n" + wind + "\n" + pressure + "\n" + humidity;
             todayWeather.setText(weatherResult);
@@ -126,19 +135,63 @@ public class MainActivity extends AppCompatActivity implements IWeatherLoader {
 
     @Override
     public void parseCurrentDayWeather(Response response) {
-        Log.d("Weather:", response.toString());
+        Log.d(TAG, response.toString());
         String res = new String(((TypedByteArray) response.getBody()).getBytes());
-        curWeather = new ParserUtil.CurrentDayWeather(res).parse();
-        setCurrentDayWeatherData(curWeather);
+        Weather curWeather = new ParserUtil.CurrentDayWeather(res).parse();
+        bindCurrentDayWeatherData(curWeather);
+        saveCurWeather(curWeather);
     }
 
     @Override
     public void parseWeathersForecast16(Response response) {
-        Log.d("Weather:", response.toString());
+        Log.d(TAG, response.toString());
         String res = new String(((TypedByteArray) response.getBody()).getBytes());
-        weathersForecast16 = new ParserUtil.Next16DaysWeather(res).parse();
+        List<Weather> weathersForecast16 = new ParserUtil.Next16DaysWeather(res).parse();
         if (weathersForecast16 != null) {
             adapter.setWeatherData(weathersForecast16);
+            saveForecastWeather(weathersForecast16);
+        }
+    }
+
+    private void saveCurWeather(@Nullable final Weather curWeather) {
+        if (curWeather != null) {
+            SharedPreferences sharedPreferences = getPreferences(MODE_PRIVATE);
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            Gson gson = new Gson();
+            String curWeatherStr = gson.toJson(curWeather);
+            editor.putString(KEY_CURRENT_WEATHER, curWeatherStr);
+            editor.apply();
+        }
+    }
+
+    private void saveForecastWeather(@NonNull List<Weather> weathersForecast16) {
+        SharedPreferences sharedPreferences = getPreferences(MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        Gson gson = new Gson();
+        String forecastWeatherStr = gson.toJson(weathersForecast16);
+        editor.putString(KEY_FORECAST16_WEATHER, forecastWeatherStr);
+        editor.apply();
+    }
+
+    private void restoreWeatherData() {
+        SharedPreferences sharedPreferences = getPreferences(MODE_PRIVATE);
+        //saved current day's weather
+        String curWeatherStr = sharedPreferences.getString(KEY_CURRENT_WEATHER, null);
+        if (curWeatherStr != null) {
+            Gson gson = new Gson();
+            Weather weather = gson.fromJson(curWeatherStr, Weather.class);
+            bindCurrentDayWeatherData(weather);
+        }
+        //saved forecast 16 days weather
+        String forecastWeatherStr = sharedPreferences.getString(KEY_FORECAST16_WEATHER, null);
+        if (forecastWeatherStr != null) {
+            Gson gson = new Gson();
+            Type type = new TypeToken<List<Weather>>() {
+            }.getType();
+            List<Weather> weathersForecast16 = gson.fromJson(forecastWeatherStr, type);
+            if (weathersForecast16 != null) {
+                adapter.setWeatherData(weathersForecast16);
+            }
         }
     }
 

@@ -13,7 +13,7 @@ import rx.Observable;
  */
 
 public class WeatherAPIService {
-    private static final String OPEN_WEATHER_MAP_URL = "http://api.openweathermap.org/data/2.5";
+    private static final String OPEN_WEATHER_MAP_ENDPOINT = "http://api.openweathermap.org/data/2.5";
     private WeatherAPI weatherAPI;
 
     public WeatherAPIService() {
@@ -24,7 +24,7 @@ public class WeatherAPIService {
             }
         };
 
-        RestAdapter restAdapter = new RestAdapter.Builder().setEndpoint(OPEN_WEATHER_MAP_URL)
+        RestAdapter restAdapter = new RestAdapter.Builder().setEndpoint(OPEN_WEATHER_MAP_ENDPOINT)
             .setRequestInterceptor(requestInterceptor)
             .setLogLevel(RestAdapter.LogLevel.FULL)
             .build();

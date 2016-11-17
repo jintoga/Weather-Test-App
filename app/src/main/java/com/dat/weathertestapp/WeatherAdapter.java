@@ -14,6 +14,7 @@ import com.squareup.picasso.Picasso;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 
 /**
@@ -42,22 +43,21 @@ public class WeatherAdapter extends RecyclerView.Adapter<WeatherAdapter.ViewHold
                     .into(holder.weatherIcon);
                 String weatherResult = "";
 
-                String temperature = "Temperature: ";
-                temperature +=
-                    "Day: " + TextUtil.sizeSpan(TextUtil.celsius(weather.getTemperature().getDay()),
-                        18);
-                temperature += ", Night: " + TextUtil.sizeSpan(
+                String temperature = "Температура: ";
+                temperature += "День: " + TextUtil.sizeSpan(
+                    TextUtil.celsius(weather.getTemperature().getDay()), 18);
+                temperature += ", Ночь: " + TextUtil.sizeSpan(
                     TextUtil.celsius(weather.getTemperature().getNight()), 18);
 
-                String wind = "Wind: ";
+                String wind = "Ветер: ";
                 wind += new TextUtil.DegreeToDirection(weather.getWindDeg()).convert();
                 wind += ", " + TextUtil.windUnit(weather.getWindSpeed());
 
-                String pressure = "Pressure: ";
+                String pressure = "Давление: ";
                 pressure += TextUtil.pressureUnit(
                     new TextUtil.HPAtoTorrConverter(weather.getPressure()).convert());
 
-                String humidity = "Humidity: ";
+                String humidity = "Влажность: ";
                 humidity += TextUtil.humidityUnit(weather.getHumidity());
                 weatherResult = temperature + "\n" + wind + "\n" + pressure + "\n" + humidity;
                 holder.weather.setText(weatherResult);
@@ -73,7 +73,7 @@ public class WeatherAdapter extends RecyclerView.Adapter<WeatherAdapter.ViewHold
         return 0;
     }
 
-    public void setWeatherData(ArrayList<Weather> data) {
+    public void setWeatherData(List<Weather> data) {
         if (weatherData == null) {
             weatherData = new ArrayList<>();
         }

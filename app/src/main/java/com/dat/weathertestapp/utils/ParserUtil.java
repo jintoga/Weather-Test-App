@@ -20,7 +20,7 @@ public class ParserUtil {
         }
 
         public Weather parse() {
-            Weather weather;
+            Weather weather = null;
             try {
                 JSONObject jsonObject = new JSONObject(json);
                 weather = new Weather();
@@ -40,6 +40,11 @@ public class ParserUtil {
             } catch (JSONException e) {
                 e.printStackTrace();
                 Log.e("WeatherEr", e.toString());
+                //some fields could be absent (wind's deg for example)
+                //so if weather is not null we should still get other information
+                if (weather != null) {
+                    return weather;
+                }
                 return null;
             }
         }

@@ -20,7 +20,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@+id/toolbar"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="8dp"
         android:gravity="center"
         android:orientation="horizontal">
 
@@ -43,8 +43,8 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@id/currentDayContainer"
-        android:layout_margin="8dp"
-        android:text="Next 16 days:" />
+        android:layout_margin="6dp"
+        android:text="@string/next_16_days" />
 
     <android.support.v7.widget.RecyclerView
         android:id="@+id/recyclerView"
@@ -55,8 +55,8 @@
 
     <ProgressBar
         android:id="@+id/loading"
-        android:layout_width="100dp"
-        android:layout_height="100dp"
+        android:layout_width="70dp"
+        android:layout_height="70dp"
         android:layout_centerInParent="true" />
 
     <TextView

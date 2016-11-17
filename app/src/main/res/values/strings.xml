@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">WeatherTestApp</string>
+    <string name="app_name">Погода в Барнауле</string>
 
     <string name="open_weather_map_AppID">b8db95a6366ded8bbc0de71ec0236b15</string>
     <string name="barnaul_weather_id">1510853</string>
@@ -7,4 +7,5 @@
     <string name="weather_lang">ru</string>
     <string name="count_key">16</string>
     <string name="action_refresh">Refresh</string>
+    <string name="next_16_days">Погода следующих 16 дней:</string>
 </resources>
